@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:mybatis-spring="http://mybatis.org/schema/mybatis-spring"
+	xmlns:tx="http://www.springframework.org/schema/tx"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+		http://mybatis.org/schema/mybatis-spring http://mybatis.org/schema/mybatis-spring-1.2.xsd
+		http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-4.0.xsd
+		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-4.0.xsd">
+		
+	<!-- spring管理业务逻辑组件 -->
+	<context:component-scan base-package="com.mybatis.ssm">
+		<context:exclude-filter type="annotation" 
+			expression="org.springframework.stereotype.Controller"/>
+	</context:component-scan>
+	
+	<!-- 引入外部资源配置 -->
+	<context:property-placeholder location="classpath:dbconfig.properties"/>
+	
+	<bean id="dataSource" class=" com.mchange.v2.c3p0.ComboPooledDataSource">
+		<property name="driverClass" value="${jdbc.driverClass}"></property>
+		<property name="jdbcUrl" value="${jdbc.jdbcUrl}"></property>
+		<property name="user" value="${jdbc.user}"></property>
+		<property name="password" value="${jdbc.password}"></property>
+	</bean>
+
+	
+	<!-- spring事务管理器-->
+	<bean id="dataSourceTransactionManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+		<property name="dataSource" ref="dataSource"></property>
+	</bean>
+	
+	<!-- 开启基于注解的事务 -->
+	<tx:annotation-driven transaction-manager="dataSourceTransactionManager"/>
+	
+	<!-- 创建sqlSessionFactory对象 -->
+	<bean id="sqlSessionFactoryBean" class="org.mybatis.spring.SqlSessionFactoryBean">
+		<property name="dataSource" ref="dataSource"></property>
+		<property name="configLocation" value="classpath:mybatis-config.xml"></property>
+		<property name="mapperLocations" value="classpath:mybatis/mapper/*.xml"></property>
+	</bean>
+	
+	<!-- 可批量执行的sqlSession -->
+	<bean id="sqlSession" class="org.mybatis.spring.SqlSessionTemplate">
+		<constructor-arg name="sqlSessionFactory" ref="sqlSessionFactoryBean"></constructor-arg>
+		<constructor-arg name="executorType" value="BATCH"></constructor-arg>
+	</bean>
+	
+	<!-- 扫描mapper接口 -->
+	<mybatis-spring:scan base-package="com.mybatis.ssm.dao"/>
+	
+	
+</beans>
